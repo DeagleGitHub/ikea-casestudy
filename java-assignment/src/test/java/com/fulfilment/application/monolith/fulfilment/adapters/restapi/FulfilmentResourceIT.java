@@ -1,4 +1,4 @@
-package com.fulfilment.application.monolith.fulfilment;
+package com.fulfilment.application.monolith.fulfilment.adapters.restapi;
 
 import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
