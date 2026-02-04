@@ -6,6 +6,7 @@ import jakarta.enterprise.context.ApplicationScoped;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @ApplicationScoped
 public class LocationGateway implements LocationResolver {
@@ -24,10 +25,9 @@ public class LocationGateway implements LocationResolver {
   }
 
   @Override
-  public Location resolveByIdentifier(String identifier) {
+  public Optional<Location> resolveByIdentifier(String identifier) {
     return locations.stream()
-        .filter(location -> location.identification.equals(identifier))
-        .findFirst()
-        .orElse(null);
+        .filter(location -> location.identification().equals(identifier))
+        .findFirst();
   }
 }

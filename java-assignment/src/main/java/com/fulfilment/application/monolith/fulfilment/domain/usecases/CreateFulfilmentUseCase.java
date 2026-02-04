@@ -1,5 +1,7 @@
 package com.fulfilment.application.monolith.fulfilment.domain.usecases;
 
+import com.fulfilment.application.monolith.common.exception.BusinessRuleViolationException;
+import com.fulfilment.application.monolith.common.exception.ResourceNotFoundException;
 import com.fulfilment.application.monolith.fulfilment.domain.models.Fulfilment;
 import com.fulfilment.application.monolith.fulfilment.adapters.database.FulfilmentRepository;
 import com.fulfilment.application.monolith.products.Product;
@@ -10,7 +12,6 @@ import com.fulfilment.application.monolith.warehouses.adapters.database.Warehous
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
-import jakarta.ws.rs.WebApplicationException;
 
 @ApplicationScoped
 public class CreateFulfilmentUseCase {
@@ -26,48 +27,74 @@ public class CreateFulfilmentUseCase {
 
     @Transactional
     public Fulfilment create(Long productId, Long storeId, Long warehouseId) {
-        Product product = productRepository.findById(productId);
-        if (product == null) {
-            throw new WebApplicationException("Product not found", 404);
-        }
+        Product product = findProductOrThrow(productId);
+        Store store = findStoreOrThrow(storeId);
+        DbWarehouse warehouse = findWarehouseOrThrow(warehouseId);
 
-        Store store = Store.findById(storeId);
-        if (store == null) {
-            throw new WebApplicationException("Store not found", 404);
-        }
-
-        DbWarehouse warehouse = warehouseRepository.findById(warehouseId);
-        if (warehouse == null) {
-            throw new WebApplicationException("Warehouse not found", 404);
-        }
-
-        if (fulfilmentRepository.find("product = ?1 and store = ?2 and warehouse = ?3", product, store, warehouse).firstResult() != null) {
-             throw new WebApplicationException("Fulfilment already exists", 409);
-        }
-
-        long productWarehousesForStore = fulfilmentRepository.count("product = ?1 and store = ?2", product, store);
-        if (productWarehousesForStore >= 2) {
-            throw new WebApplicationException("Product is already fulfilled by 2 warehouses for this store", 400);
-        }
-
-        long distinctWarehousesForStore = fulfilmentRepository.find("select count(distinct f.warehouse) from Fulfilment f where f.store = ?1", store).project(Long.class).firstResult();
-        
-        boolean warehouseAlreadyAssociated = fulfilmentRepository.count("store = ?1 and warehouse = ?2", store, warehouse) > 0;
-        
-        if (!warehouseAlreadyAssociated && distinctWarehousesForStore >= 3) {
-             throw new WebApplicationException("Store is already fulfilled by 3 different warehouses", 400);
-        }
-
-        long distinctProductsInWarehouse = fulfilmentRepository.find("select count(distinct f.product) from Fulfilment f where f.warehouse = ?1", warehouse).project(Long.class).firstResult();
-        
-        boolean productAlreadyInWarehouse = fulfilmentRepository.count("warehouse = ?1 and product = ?2", warehouse, product) > 0;
-        
-        if (!productAlreadyInWarehouse && distinctProductsInWarehouse >= 5) {
-            throw new WebApplicationException("Warehouse already stores 5 types of products", 400);
-        }
+        validateFulfilmentUniqueness(product, store, warehouse);
+        validateProductWarehousesLimit(product, store);
+        validateStoreWarehousesLimit(store, warehouse);
+        validateWarehouseProductsLimit(warehouse, product);
 
         Fulfilment fulfilment = new Fulfilment(product, store, warehouse);
         fulfilmentRepository.persist(fulfilment);
         return fulfilment;
+    }
+
+    private Product findProductOrThrow(Long productId) {
+        Product product = productRepository.findById(productId);
+        if (product == null) {
+            throw new ResourceNotFoundException("Product not found");
+        }
+        return product;
+    }
+
+    private Store findStoreOrThrow(Long storeId) {
+        Store store = Store.findById(storeId);
+        if (store == null) {
+            throw new ResourceNotFoundException("Store not found");
+        }
+        return store;
+    }
+
+    private DbWarehouse findWarehouseOrThrow(Long warehouseId) {
+        DbWarehouse warehouse = warehouseRepository.findById(warehouseId);
+        if (warehouse == null) {
+            throw new ResourceNotFoundException("Warehouse not found");
+        }
+        return warehouse;
+    }
+
+    private void validateFulfilmentUniqueness(Product product, Store store, DbWarehouse warehouse) {
+        if (fulfilmentRepository.existsByProductAndStoreAndWarehouse(product, store, warehouse)) {
+            throw new BusinessRuleViolationException("Fulfilment already exists");
+        }
+    }
+
+    private void validateProductWarehousesLimit(Product product, Store store) {
+        long productWarehousesForStore = fulfilmentRepository.countByProductAndStore(product, store);
+        if (productWarehousesForStore >= 2) {
+            throw new BusinessRuleViolationException("Product is already fulfilled by 2 warehouses for this store");
+        }
+    }
+
+    private void validateStoreWarehousesLimit(Store store, DbWarehouse warehouse) {
+        boolean warehouseAlreadyAssociated = fulfilmentRepository.existsByStoreAndWarehouse(store, warehouse);
+        if (!warehouseAlreadyAssociated) {
+            long distinctWarehousesForStore = fulfilmentRepository.countDistinctWarehousesByStore(store);
+            if (distinctWarehousesForStore >= 3) {
+                throw new BusinessRuleViolationException("Store is already fulfilled by 3 different warehouses");
+            }
+        }
+    }
+
+    private void validateWarehouseProductsLimit(DbWarehouse warehouse, Product product) {
+        boolean productAlreadyInWarehouse = fulfilmentRepository.existsByWarehouseAndProduct(warehouse, product);
+        if (!productAlreadyInWarehouse) {
+            long distinctProductsInWarehouse = fulfilmentRepository.countDistinctProductsByWarehouse(warehouse);
+            if (distinctProductsInWarehouse >= 5) {
+                throw new BusinessRuleViolationException("Warehouse already stores 5 types of products");
+            }
+        }
     }
 }

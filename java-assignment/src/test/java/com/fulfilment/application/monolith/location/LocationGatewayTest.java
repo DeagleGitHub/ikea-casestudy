@@ -5,6 +5,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class LocationGatewayTest {
@@ -24,11 +26,11 @@ class LocationGatewayTest {
   void whenResolveExistingLocation_ShouldReturnLocationDetails(String identifier, int warehouses, int capacity) {
     LocationGateway locationGateway = new LocationGateway();
 
-    Location location = locationGateway.resolveByIdentifier(identifier);
+    Location location = locationGateway.resolveByIdentifier(identifier).orElseThrow();
 
-    assertEquals(identifier, location.identification);
-    assertEquals(warehouses, location.maxNumberOfWarehouses);
-    assertEquals(capacity, location.maxCapacity);
+    assertEquals(identifier, location.identification());
+    assertEquals(warehouses, location.maxNumberOfWarehouses());
+    assertEquals(capacity, location.maxCapacity());
   }
 
   @DisplayName("GIVEN invalid or null identifiers WHEN resolving locations THEN should return null")
@@ -42,8 +44,8 @@ class LocationGatewayTest {
   void whenResolveInvalidIdentifier_ShouldReturnNull(String identifier) {
     LocationGateway locationGateway = new LocationGateway();
 
-    Location location = locationGateway.resolveByIdentifier(identifier);
+    Optional<Location> location = locationGateway.resolveByIdentifier(identifier);
 
-    assertNull(location, "Should return null for invalid input: " + identifier);
+    assertTrue(location.isEmpty(), "Should return empty for invalid input: " + identifier);
   }
 }

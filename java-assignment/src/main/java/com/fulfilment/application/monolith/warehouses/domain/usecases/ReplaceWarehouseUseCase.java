@@ -15,39 +15,37 @@ public class ReplaceWarehouseUseCase implements ReplaceWarehouseOperation {
   private static final Logger LOGGER = LoggerFactory.getLogger(ReplaceWarehouseUseCase.class);
 
   private final WarehouseStore warehouseStore;
+  private final WarehouseValidator warehouseValidator;
 
-  public ReplaceWarehouseUseCase(WarehouseStore warehouseStore) {
+  public ReplaceWarehouseUseCase(WarehouseStore warehouseStore, WarehouseValidator warehouseValidator) {
     this.warehouseStore = warehouseStore;
+    this.warehouseValidator = warehouseValidator;
   }
 
   @Override
   public void replace(Warehouse newWarehouse) {
-    LOGGER.info("Attempting to replace warehouse with BU Code: [{}]", newWarehouse.businessUnitCode);
+    LOGGER.info("Attempting to replace warehouse with BU Code: [{}]", newWarehouse.getBusinessUnitCode());
 
-    var existing = warehouseStore.findByBusinessUnitCode(newWarehouse.businessUnitCode);
+    var existing = warehouseStore.findByBusinessUnitCode(newWarehouse.getBusinessUnitCode());
 
     if (existing == null) {
-      LOGGER.warn("Replacement failed: Active warehouse [{}] not found.", newWarehouse.businessUnitCode);
+      LOGGER.warn("Replacement failed: Active warehouse [{}] not found.", newWarehouse.getBusinessUnitCode());
       throw new NotFoundException("Active warehouse not found for replacement.");
     }
 
-    if (!newWarehouse.stock.equals(existing.stock)) {
+    if (!newWarehouse.getStock().equals(existing.getStock())) {
       LOGGER.warn("Replacement failed: Stock mismatch for BU Code [{}]. Existing: {}, New: {}",
-          newWarehouse.businessUnitCode, existing.stock, newWarehouse.stock);
-      throw new BadRequestException("New warehouse stock must match existing stock: " + existing.stock);
+          newWarehouse.getBusinessUnitCode(), existing.getStock(), newWarehouse.getStock());
+      throw new BadRequestException("New warehouse stock must match existing stock: " + existing.getStock());
     }
 
-    if (newWarehouse.capacity < existing.stock) {
-      LOGGER.warn("Replacement failed: New capacity ({}) cannot handle current stock ({}) for BU Code [{}].",
-          newWarehouse.capacity, existing.stock, newWarehouse.businessUnitCode);
-      throw new BadRequestException("New capacity cannot handle current stock.");
-    }
+    warehouseValidator.validateForReplacement(newWarehouse, existing);
 
-    LOGGER.info("Archiving existing warehouse [{}] and creating the new version.", newWarehouse.businessUnitCode);
+    LOGGER.info("Archiving existing warehouse [{}] and creating the new version.", newWarehouse.getBusinessUnitCode());
     warehouseStore.remove(existing);
 
     warehouseStore.create(newWarehouse);
 
-    LOGGER.info("Successfully replaced warehouse with BU Code: [{}]", newWarehouse.businessUnitCode);
+    LOGGER.info("Successfully replaced warehouse with BU Code: [{}]", newWarehouse.getBusinessUnitCode());
   }
 }

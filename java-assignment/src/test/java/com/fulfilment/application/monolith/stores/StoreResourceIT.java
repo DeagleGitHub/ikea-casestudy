@@ -22,7 +22,8 @@ class StoreResourceIT {
 
   @Inject EntityManager entityManager;
 
-  @InjectSpy LegacyStoreManagerGateway legacyStoreManagerGateway;
+  @InjectSpy
+  LegacyStoreManagerGateway legacyStoreManagerGateway;
 
   @BeforeEach
   @Transactional

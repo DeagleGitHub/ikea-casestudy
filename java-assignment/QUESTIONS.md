@@ -22,7 +22,5 @@ Conversely, the Code-First approach—where tools generate documentation via ann
 
 **Answer:**
 ```txt
-When facing tight deadlines, it is essential to prioritize testing strategies that offer the highest ROI (Return on Investment). In this scenario, I would focus on implementing Integration Tests (IT) for all use cases. These provide broad coverage by indirectly testing the underlying service logic.
-
-I would defer the creation of traditional Unit Tests—which require a dedicated test class for every implementation class—to a later stage. During the early phases of a project, where the code changes rapidly, the overhead of maintaining granular unit tests can hinder development velocity.
+A balanced testing strategy is crucial for ensuring both immediate and long-term project health. While Integration Tests provide excellent value by validating complete use cases and interactions between components, they should not replace Unit Tests. A pragmatic approach involves using Integration Tests to cover the primary success paths and critical error scenarios of the API. Concurrently, Unit Tests should be focused on complex business logic, algorithms, and edge cases within services and domain models. This combination ensures broad coverage and allows for rapid, isolated testing of intricate logic, which significantly speeds up debugging and improves code quality and maintainability over the project's lifecycle.
 ```

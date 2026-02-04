@@ -14,4 +14,6 @@ public interface WarehouseStore {
   Warehouse findByBusinessUnitCode(String buCode);
 
   long countActiveByLocation(String location);
+
+  int calculateTotalCapacityByLocation(String location);
 }

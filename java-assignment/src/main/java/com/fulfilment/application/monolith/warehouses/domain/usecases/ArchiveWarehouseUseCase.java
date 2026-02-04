@@ -20,8 +20,8 @@ public class ArchiveWarehouseUseCase implements ArchiveWarehouseOperation {
 
   @Override
   public void archive(Warehouse warehouse) {
-    LOGGER.info("Archiving warehouse with BU Code: [{}]", warehouse.businessUnitCode);
+    LOGGER.info("Archiving warehouse with BU Code: [{}]", warehouse.getBusinessUnitCode());
     warehouseStore.remove(warehouse);
-    LOGGER.info("Warehouse [{}] successfully archived.", warehouse.businessUnitCode);
+    LOGGER.info("Warehouse [{}] successfully archived.", warehouse.getBusinessUnitCode());
   }
 }

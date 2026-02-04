@@ -53,19 +53,19 @@ public class WarehouseResourceImpl implements WarehouseResource {
   private Warehouse toWarehouseResponse(
       com.fulfilment.application.monolith.warehouses.domain.models.Warehouse warehouse) {
     var response = new Warehouse();
-    response.setBusinessUnitCode(warehouse.businessUnitCode);
-    response.setLocation(warehouse.location);
-    response.setCapacity(warehouse.capacity);
-    response.setStock(warehouse.stock);
+    response.setBusinessUnitCode(warehouse.getBusinessUnitCode());
+    response.setLocation(warehouse.getLocation());
+    response.setCapacity(warehouse.getCapacity());
+    response.setStock(warehouse.getStock());
     return response;
   }
 
   private com.fulfilment.application.monolith.warehouses.domain.models.Warehouse toDomain(Warehouse dto) {
     var domain = new com.fulfilment.application.monolith.warehouses.domain.models.Warehouse();
-    domain.businessUnitCode = dto.getBusinessUnitCode();
-    domain.location = dto.getLocation();
-    domain.capacity = dto.getCapacity();
-    domain.stock = dto.getStock();
+    domain.setBusinessUnitCode(dto.getBusinessUnitCode());
+    domain.setLocation(dto.getLocation());
+    domain.setCapacity(dto.getCapacity());
+    domain.setStock(dto.getStock());
     return domain;
   }
 }

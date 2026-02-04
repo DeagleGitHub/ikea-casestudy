@@ -31,4 +31,4 @@ jobs:
           path: target/site/jacoco/
 
       - name: Check Quality Gate
-        run: echo "Check Maven logs for JaCoCo coverage validation"
+        run: mvn jacoco:check

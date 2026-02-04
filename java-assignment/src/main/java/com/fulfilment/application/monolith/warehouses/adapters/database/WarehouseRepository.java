@@ -21,14 +21,14 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
   @Transactional
   public void create(Warehouse warehouse) {
     DbWarehouse dbEntity = fromWarehouse(warehouse);
-    dbEntity.createdAt = LocalDateTime.now();
+    dbEntity.setCreatedAt(LocalDateTime.now());
     this.persist(dbEntity);
   }
 
   @Override
   @Transactional
   public void remove(Warehouse warehouse) {
-    this.update("archivedAt = ?1 where businessUnitCode = ?2", LocalDateTime.now(), warehouse.businessUnitCode);
+    this.update("archivedAt = ?1 where businessUnitCode = ?2", LocalDateTime.now(), warehouse.getBusinessUnitCode());
   }
 
   @Override
@@ -44,12 +44,20 @@ public class WarehouseRepository implements WarehouseStore, PanacheRepository<Db
     return this.count("location = ?1 and archivedAt IS NULL", location);
   }
 
+  @Override
+  public int calculateTotalCapacityByLocation(String location) {
+    Long sum = this.find("select sum(capacity) from DbWarehouse where location = ?1 and archivedAt IS NULL", location)
+            .project(Long.class)
+            .firstResult();
+    return sum != null ? sum.intValue() : 0;
+  }
+
   private DbWarehouse fromWarehouse(Warehouse warehouse) {
     DbWarehouse db = new DbWarehouse();
-    db.businessUnitCode = warehouse.businessUnitCode;
-    db.location = warehouse.location;
-    db.capacity = warehouse.capacity;
-    db.stock = warehouse.stock;
+    db.setBusinessUnitCode(warehouse.getBusinessUnitCode());
+    db.setLocation(warehouse.getLocation());
+    db.setCapacity(warehouse.getCapacity());
+    db.setStock(warehouse.getStock());
     return db;
   }
 }

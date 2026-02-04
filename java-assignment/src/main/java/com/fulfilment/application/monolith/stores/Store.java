@@ -1,20 +1,24 @@
 package com.fulfilment.application.monolith.stores;
 
-import io.quarkus.hibernate.orm.panache.PanacheEntity;
-import jakarta.persistence.Cacheable;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
 
 @Entity
 @Cacheable
-public class Store extends PanacheEntity {
+@Getter
+@Setter
+@NoArgsConstructor
+public class Store extends PanacheEntityBase {
+
+  @Id @GeneratedValue private Long id;
 
   @Column(length = 40, unique = true)
-  public String name;
+  private String name;
 
-  public int quantityProductsInStock;
-
-  public Store() {}
+  private int quantityProductsInStock;
 
   public Store(String name) {
     this.name = name;

@@ -7,6 +7,9 @@ import jakarta.inject.Inject;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.List;
 
 @Path("/fulfilment")
@@ -22,10 +25,10 @@ public class FulfilmentResource {
 
     @POST
     public Response create(CreateFulfilmentRequest request) {
-        if (request.productId == null || request.storeId == null || request.warehouseId == null) {
+        if (request.getProductId() == null || request.getStoreId() == null || request.getWarehouseId() == null) {
             throw new WebApplicationException("productId, storeId and warehouseId are required", 400);
         }
-        Fulfilment fulfilment = createFulfilmentUseCase.create(request.productId, request.storeId, request.warehouseId);
+        Fulfilment fulfilment = createFulfilmentUseCase.create(request.getProductId(), request.getStoreId(), request.getWarehouseId());
         return Response.status(Response.Status.CREATED).entity(fulfilment).build();
     }
 
@@ -34,9 +37,11 @@ public class FulfilmentResource {
         return getFulfilmentUseCase.getAll();
     }
 
+    @Getter
+    @Setter
     public static class CreateFulfilmentRequest {
-        public Long productId;
-        public Long storeId;
-        public Long warehouseId;
+        private Long productId;
+        private Long storeId;
+        private Long warehouseId;
     }
 }
